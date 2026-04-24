@@ -78,7 +78,17 @@ vector_store = Chroma(
     embedding_function=embeddings,
     persist_directory="./chroma_langchain_db",
 )
-vector_store.add_documents(documents=all_splits)
+if vector_store._collection.count() == 0:
+    batch_size = 5000
+    print(f"Adicionando {len(all_splits)} documentos ao Chroma em batches de {batch_size}...")
+    for i in range(0, len(all_splits), batch_size):
+        batch = all_splits[i:i + batch_size]
+        vector_store.add_documents(documents=batch)
+        print(f"  {min(i + batch_size, len(all_splits))}/{len(all_splits)} chunks adicionados")
+    print("Concluído!")
+else:
+    print(f"Coleção existente encontrada com {vector_store._collection.count()} documentos. Pulando ingestão.")
+
 vector_retriever = vector_store.as_retriever(search_kwargs={"k": 5})
 
 # 4. Retriever BM25 (Sparse / Lexical)
