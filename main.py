@@ -51,9 +51,9 @@ ground_truths = [
 
 # 1. Setup
 model = ChatOpenAI(
-    model="openai-gpt-oss-120b",
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
-    openai_api_base="https://inference.do-ai.run/v1",
+    model="n/a",
+    openai_api_key=os.getenv("DO_AGENT_API_KEY"),
+    openai_api_base=os.getenv("DO_AGENT_ENDPOINT"),  # https://agent-xxxx.ondigitalocean.app/api/v1
     temperature=0.7,
     max_tokens=1024,
 )
