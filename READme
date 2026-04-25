@@ -28,10 +28,10 @@ Sistema de Retrieval-Augmented Generation (RAG) hibrido que combina busca lexica
 3. Execute:
 
 ```bash
-python app.py
+python main.py
 ```
 ## Estrutura
 
-- `app.py` — codigo principal do pipeline RAG hibrido
+- `main.py` — codigo principal do pipeline RAG hibrido
 - `docs/` — PDFs usados como base de conhecimento
 - `chroma_langchain_db/` — banco vetorial persistido (Chroma)

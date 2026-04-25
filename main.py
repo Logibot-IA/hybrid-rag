@@ -1,4 +1,5 @@
 import os
+import re
 from dotenv import load_dotenv
 
 from langchain_openai import ChatOpenAI
@@ -50,9 +51,9 @@ ground_truths = [
 
 # 1. Setup
 model = ChatOpenAI(
-    model="llama3.3-70b-instruct",
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
-    openai_api_base="https://inference.do-ai.run/v1",
+    model="n/a",
+    openai_api_key=os.getenv("DO_AGENT_API_KEY"),
+    openai_api_base=os.getenv("DO_AGENT_ENDPOINT"),  # https://agent-xxxx.ondigitalocean.app/api/v1
     temperature=0.7,
     max_tokens=1024,
 )
@@ -77,7 +78,17 @@ vector_store = Chroma(
     embedding_function=embeddings,
     persist_directory="./chroma_langchain_db",
 )
-vector_store.add_documents(documents=all_splits)
+if vector_store._collection.count() == 0:
+    batch_size = 5000
+    print(f"Adicionando {len(all_splits)} documentos ao Chroma em batches de {batch_size}...")
+    for i in range(0, len(all_splits), batch_size):
+        batch = all_splits[i:i + batch_size]
+        vector_store.add_documents(documents=batch)
+        print(f"  {min(i + batch_size, len(all_splits))}/{len(all_splits)} chunks adicionados")
+    print("Concluído!")
+else:
+    print(f"Coleção existente encontrada com {vector_store._collection.count()} documentos. Pulando ingestão.")
+
 vector_retriever = vector_store.as_retriever(search_kwargs={"k": 5})
 
 # 4. Retriever BM25 (Sparse / Lexical)
@@ -115,9 +126,25 @@ rag_chain = (
 )
 
 
+def get_next_results_csv_path(results_dir="results", prefix="hybrid", suffix="_csv.csv"):
+    os.makedirs(results_dir, exist_ok=True)
+
+    pattern = re.compile(rf"^{re.escape(prefix)}_(\d+){re.escape(suffix)}$")
+    max_index = 0
+
+    for filename in os.listdir(results_dir):
+        match = pattern.match(filename)
+        if match:
+            max_index = max(max_index, int(match.group(1)))
+
+    next_index = max_index + 1
+    next_filename = f"{prefix}_{next_index}{suffix}"
+    return os.path.join(results_dir, next_filename)
+
+
 def evaluate_with_ragas():
     eval_llm = ChatOpenAI(
-        model="llama3.3-70b-instruct",
+        model="openai-gpt-oss-120b",
         openai_api_key=os.getenv("OPENAI_API_KEY"),
         openai_api_base="https://inference.do-ai.run/v1",
         temperature=0,
@@ -155,6 +182,10 @@ def evaluate_with_ragas():
     df = result.to_pandas()
     print("\nDetalhes por query:")
     print(df.to_string())
+
+    csv_path = get_next_results_csv_path()
+    df.to_csv(csv_path, index=False)
+    print(f"\nCSV salvo em: {csv_path}")
 
     return result
 
