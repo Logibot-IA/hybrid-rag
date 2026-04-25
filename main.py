@@ -1,5 +1,5 @@
 import os
-import re
+from itertools import count
 from dotenv import load_dotenv
 
 from langchain_openai import ChatOpenAI
@@ -126,20 +126,14 @@ rag_chain = (
 )
 
 
-def get_next_results_csv_path(results_dir="results", prefix="hybrid", suffix="_csv.csv"):
-    os.makedirs(results_dir, exist_ok=True)
-
-    pattern = re.compile(rf"^{re.escape(prefix)}_(\d+){re.escape(suffix)}$")
-    max_index = 0
-
-    for filename in os.listdir(results_dir):
-        match = pattern.match(filename)
-        if match:
-            max_index = max(max_index, int(match.group(1)))
-
-    next_index = max_index + 1
-    next_filename = f"{prefix}_{next_index}{suffix}"
-    return os.path.join(results_dir, next_filename)
+def salvar(df, nome_base="hybrid-rag"):
+    os.makedirs("results", exist_ok=True)
+    for i in count(1):
+        nome = os.path.join("results", f"{nome_base}_{i}.csv")
+        if not os.path.exists(nome):
+            df.to_csv(nome, index=False, encoding="utf-8-sig", sep=";")
+            print(f"Salvo em: {nome}")
+            break
 
 
 def evaluate_with_ragas():
@@ -183,9 +177,7 @@ def evaluate_with_ragas():
     print("\nDetalhes por query:")
     print(df.to_string())
 
-    csv_path = get_next_results_csv_path()
-    df.to_csv(csv_path, index=False)
-    print(f"\nCSV salvo em: {csv_path}")
+    salvar(df)
 
     return result
 
