@@ -9,21 +9,21 @@ Sistema de Retrieval-Augmented Generation (RAG) hibrido que combina busca lexica
    - BM25 (busca por palavras-chave)
    - Chroma (busca por similaridade semantica com embeddings)
 3. Os resultados sao combinados com pesos (40% BM25, 60% vetorial) via EnsembleRetriever.
-4. O contexto recuperado e enviado ao LLM (Llama 3.3 70B) para gerar a resposta.
+4. O contexto recuperado e enviado ao LLM OpenAI (`gpt-5.5` por padrão) para gerar a resposta.
 
 ## Dependencias principais
 
 - langchain
 - langchain-openai
-- langchain-huggingface
-- langchain-chroma
 - langchain-community
-- sentence-transformers
+- langchain-classic
+- langchain-openai
+- chromadb
 - python-dotenv
 
 ## Configuracao
 
-1. Crie um arquivo `.env` com a variavel `OPENAI_API_KEY`.
+1. Crie um arquivo `.env` a partir do `.env.example` e informe `OPENAI_API_KEY`.
 2. Coloque os PDFs na pasta `docs/`.
 3. Execute:
 
@@ -34,4 +34,4 @@ python main.py
 
 - `main.py` — codigo principal do pipeline RAG hibrido
 - `docs/` — PDFs usados como base de conhecimento
-- `chroma_langchain_db/` — banco vetorial persistido (Chroma)
+- `chroma_hybrid_db_openai/` — banco vetorial persistido (Chroma)
